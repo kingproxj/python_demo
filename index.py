@@ -350,6 +350,9 @@ def calc_main_feature(entname):
 
 
 def application(env, start_response):
+    print("==========================")
+    print("params is",env["QUERY_STRING"])
+    print("==========================")
     entname = '山东惠硕信息技术有限公司'
     result = calc_main_feature(entname)
     print(result)

@@ -5,7 +5,7 @@ from multiprocessing import Process
 import time
 
 os.environ["Handler"]="index.application"
-os.environ['CodeUri'] = 'https://raw.githubusercontent.com/kingproxj/fcs/master/replace.sh,https://raw.githubusercontent.com/kingproxj/fcs/master/Python3.7/start.sh'
+os.environ['CodeUri'] = 'https://raw.githubusercontent.com/kingproxj/python_demo/master/replace.sh,https://raw.githubusercontent.com/kingproxj/python_demo/start.sh'
 
 def Schedule(blocknum, blocksize, totalsize):
     '''

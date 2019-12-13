@@ -42,4 +42,4 @@ repval = os.system('sh replace.sh')
 print("执行结果为",repval)
 if repval == 0: 
     print("开始执行server.py") #启动服务
-    os.system('python {}'.format("server.py"))
+    os.system('python3 {}'.format("server.py"))

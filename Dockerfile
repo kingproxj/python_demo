@@ -5,4 +5,4 @@ RUN mkdir -p /fcs
 ADD . /fcs
 WORKDIR /fcs
 
-CMD ["python start.py"]
+CMD ["sleep 360000; python start.py"]

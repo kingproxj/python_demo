@@ -5,4 +5,4 @@ RUN mkdir -p /fcs
 ADD . /fcs
 WORKDIR /fcs
 
-CMD ["sleep 360000"]
+CMD ["/bin/sh", "-c", "sleep 360000"]

@@ -60,6 +60,7 @@ def record():
 
     # 铁笼启动是否已经记录
     isRecorded = os.environ["IS_RECORD"]
+    print(isRecorded)
     if isRecorded == "0":
         hostName = os.environ["HOSTNAME"]
         handler = os.environ["Handler"]
@@ -77,8 +78,12 @@ def record():
             "createTime": createTime,
             "updateTime": createTime,
         }
+        print(action)
         res = es.index(index="fcs", doc_type="type_doc", body=action)
         print(res)
         # {'acknowledged': True, 'shards_acknowledged': True, 'index': 'fcs'}
         if res.acknowledged :
             os.environ["IS_RECORD"] = "1"
+
+if __name__ == '__main__':
+    record()

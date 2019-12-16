@@ -60,13 +60,14 @@ def record():
 
     # 铁笼启动是否已经记录
     isRecorded = os.environ["IS_RECORD"]
-    print(isRecorded)
     if isRecorded == "0":
         hostName = os.environ["HOSTNAME"]
         handler = os.environ["Handler"]
         runtime = os.environ["Runtime"]
         content = "启动铁笼" + hostName
-        createTime = datetime.now()
+        now = datetime.now()
+        print(now.strftime("%Y-%m-%d %H:%M:%S"))
+        createTime = now.strftime("%Y-%m-%d %H:%M:%S")
 
         # 插入数据
         action = {
@@ -78,12 +79,12 @@ def record():
             "createTime": createTime,
             "updateTime": createTime,
         }
-        print(action)
         res = es.index(index="fcs", doc_type="type_doc", body=action)
         print(res)
-        # {'acknowledged': True, 'shards_acknowledged': True, 'index': 'fcs'}
-        if res.acknowledged :
+        # {'_index': 'fcs', '_type': 'type_doc', '_id': 'z4dbDW8BtULaBa6qlsZO', '_version': 1, 'result': 'created', '_shards': {'total': 2, 'successful': 2, 'failed': 0}, '_seq_no': 0, '_primary_term': 1}
+        if res.result == "created":
             os.environ["IS_RECORD"] = "1"
+
 
 if __name__ == '__main__':
     record()

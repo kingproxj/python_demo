@@ -112,14 +112,15 @@ def RecordAudit(operations, detail):
             "created_time_ms": 1,
             "status": "成功"
         }
+        print("record is ", action)
         res = es.index(index="fcs_audit", doc_type="doc", body=action)
-        print(res)
+        print("record result is ", res)
 
 
 if __name__ == '__main__':
     environ = {
         "QUERY_STRING": "test=a"
     }
-    createAuditIndex(environ)
+    createAuditIndex()
     # id = worker.get_id()
     # print(id)

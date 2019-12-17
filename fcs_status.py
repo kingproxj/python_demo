@@ -76,6 +76,7 @@ def recordStatus():
         }
         print(mappings)
         res = es.indices.create(index='fcs_status', body=mappings)
+        print("es.indices.create result is ", res)
 
     # 铁笼启动是否已经记录
     isRecorded = os.environ["IS_RECORD"]
@@ -85,12 +86,12 @@ def recordStatus():
     serverName = os.environ["SERVER_NAME"]
     content = "启动铁笼" + hostName
     now = datetime.now()
-    print(now.strftime("%Y-%m-%d %H:%M:%S"))
-    createTime = now.strftime("%Y-%m-%d %H:%M:%S")
-    id = worker.get_id()
-    print("id is", id)
+    #print(now.strftime("%Y-%m-%d %H:%M:%S"))
+    nowFormat = now.strftime("%Y-%m-%d %H:%M:%S")
     user_id = os.environ["creator"]
     if isRecorded == "0":
+        id = worker.get_id()
+        print("id is", id)
         # 插入数据
         action = {
             "id": id,
@@ -100,32 +101,37 @@ def recordStatus():
             "user_id": user_id,
             "company_name": "",
             "live_time": 0,
-            "destroy_time": "",
-            "created_time": createTime,
+            "destroy_time": None,
+            "created_time": nowFormat,
             "status": "运行中",
             "blockchain": "数安链"
         }
         res = es.index(index="fcs_status", doc_type="doc", body=action)
-        print(res)
+        print("insert status result:", res)
         # {'_index': 'fcs', '_type': 'type_doc', '_id': 'z4dbDW8BtULaBa6qlsZO', '_version': 1, 'result': 'created', '_shards': {'total': 2, 'successful': 2, 'failed': 0}, '_seq_no': 0, '_primary_term': 1}
-        if res.result == "created":
-            os.environ["IS_RECORD"] = id
+        if res["result"] == "created":
+            os.environ["IS_RECORD"] = res["_id"]
+            print("IS_RECORD is ", os.environ["IS_RECORD"])
     else:
         # 更新数据
         action = {
-            "id": id,
-            "service_id": hostName,
-            "service_name": serverName,
-            "request_id": "",
-            "user_id": user_id,
-            "company_name": "",
-            "live_time": 0,
-            "destroy_time": "",
-            "created_time": createTime,
-            "status": "已销毁",
-            "blockchain": "数安链"
+            "doc": {
+                # "id": isRecorded,
+                # "service_id": hostName,
+                # "service_name": serverName,
+                # "request_id": "",
+                # "user_id": user_id,
+                # "company_name": "",
+                # "live_time": 0,
+                "destroy_time": nowFormat,
+                # "created_time": createTime,
+                "status": "已销毁",
+                "blockchain": "数安链"
+            }
         }
-        es.update(index="fcs_status", doc_type="doc", body=action)
+        print("update status", os.environ["IS_RECORD"])
+        res = es.update(index="fcs_status", id=isRecorded, doc_type="doc", body=action)
+        print("es.update result is", res)
 
 
 if __name__ == '__main__':

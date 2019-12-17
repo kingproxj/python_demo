@@ -53,5 +53,5 @@ def application(environ, start_response):
     result = HandlerName.FunctionName(environ, start_response)
     fcs_audit.RecordAudit("铁笼输出", result)
     # 更新为销毁状态
-    fcs_status.recordStatus(environ)
+    fcs_status.recordStatus()
     return result

@@ -44,12 +44,12 @@ if "CodeUri" in os.environ:
 print("开始执行replace.sh")
 repval = os.system('sh replace.sh')
 print("执行结果为",repval)
-#if repval == 0: 
+if repval == 0: 
     #print("开始执行server.py") #启动服务
     #os.system('python3 {}'.format("server.py"))
 
-# 创建一个服务器，IP地址为空，端口是8000，处理函数是application:
-httpd = make_server('', 8000, application)
-print('Serving HTTP on port 8000...')
-# 开始监听HTTP请求:
-httpd.serve_forever()
+    # 创建一个服务器，IP地址为空，端口是8000，处理函数是application:
+    httpd = make_server('', 8000, application)
+    print('Serving HTTP on port 8000...')
+    # 开始监听HTTP请求:
+    httpd.serve_forever()

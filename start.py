@@ -41,9 +41,9 @@ if "CodeUri" in os.environ:
 
     print('主线程运行时间: %s'%(time.time()-start_time))
 
-#print("开始执行replace.sh")
-#repval = os.system('sh replace.sh')
-#print("执行结果为",repval)
+print("开始执行replace.sh")
+repval = os.system('sh replace.sh')
+print("执行结果为",repval)
 #if repval == 0: 
     #print("开始执行server.py") #启动服务
     #os.system('python3 {}'.format("server.py"))

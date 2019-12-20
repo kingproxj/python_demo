@@ -78,11 +78,13 @@ def createAuditIndex():
         print(res)
 
 
-def RecordAudit(operations, detail):
+def recordAudit(operations, detail):
     """
     记录启动铁笼日志
     """
+    print("operation is ", operations)
     if operations == "":
+        print("operations is none, return")
         return
 
     res = es.indices.exists(index="fcs_audit")

@@ -35,7 +35,7 @@ def application(environ, start_response):
         for code_url in codeUris:
             filename = code_url.split('/')[-1]
             print("开始下载", filename)
-            fcs_audit.RecordAudit("铁笼启动", "下载模型" + filename)
+            fcs_audit.recordAudit("铁笼启动", "下载模型" + filename)
             # urllib.request.urlretrieve(code_url, filename, Schedule)
 
             p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
@@ -48,10 +48,10 @@ def application(environ, start_response):
         print('主线程运行时间: %s' % (time.time() - start_time))
 
     params = environ['QUERY_STRING']
-    fcs_audit.RecordAudit("输入参数", params)
-    fcs_audit.RecordAudit("加载模型", modules)
+    fcs_audit.recordAudit("输入参数", params)
+    fcs_audit.recordAudit("加载模型", modules)
     result = HandlerName.FunctionName(environ, start_response)
-    fcs_audit.RecordAudit("铁笼输出", result)
+    fcs_audit.recordAudit("铁笼输出", result)
     # 更新为销毁状态
     fcs_status.recordStatus()
     return result

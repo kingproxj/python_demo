@@ -9,9 +9,9 @@ import fcs_audit
 
 import HandlerName
 
-models = ""
+modelFiles = ""
 if "ModelFile" in os.environ:
-    models = os.environ["ModelFile"]
+    modelFiles = os.environ["ModelFile"]
 codeFiles = ""
 if "CodeFile" in os.environ:
     codeFiles = os.environ["CodeFile"]
@@ -72,8 +72,8 @@ def application(environ, start_response):
 
     params = environ['QUERY_STRING']
     fcs_audit.recordAudit("输入参数", params)
-    fcs_audit.recordAudit("加载算法", codeFiles)
-    fcs_audit.recordAudit("加载模型", models)
+    fcs_audit.recordAudit("加载模型", codeFiles)
+    # fcs_audit.recordAudit("加载算法", codeFiles)
     result = HandlerName.FunctionName(environ, start_response)
     fcs_audit.recordAudit("铁笼输出", result)
     # 更新为销毁状态

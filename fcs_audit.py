@@ -6,8 +6,8 @@ from elasticsearch.helpers import bulk
 from t_snowflake import IdWorker
 
 worker = IdWorker(1, 2, 0)
-#esHost = os.environ["ES_SERVER_HOST"]
-esHost = "117.73.3.232:31103"
+esHost = os.environ["ES_SERVER_HOST"]
+# esHost = "117.73.3.232:31103"
 es = Elasticsearch([esHost])
 
 

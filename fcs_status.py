@@ -15,6 +15,7 @@ def createStatusIndex():
     记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
     """
     res = es.indices.exists(index="fcs_status")
+    print("fcs_status es.indices.exists is ", res)
     if not res:
         # 创建索引,建立mapping索引
         mappings = {

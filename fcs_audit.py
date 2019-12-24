@@ -17,6 +17,7 @@ def createAuditIndex():
     :return:
     """
     res = es.indices.exists(index="fcs_audit")
+    print("fcs_audit es.indices.exists is ", res)
     if not res:
         # 创建fcs_audit索引
         mappings = {

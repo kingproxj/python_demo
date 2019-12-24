@@ -10,8 +10,7 @@ esHost = os.environ["ES_SERVER_HOST"]
 # esHost = "117.73.3.232:31103"
 es = Elasticsearch([esHost])
 
-
-def recordStatus():
+def createStatusIndex():
     """
     记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
     """
@@ -78,6 +77,11 @@ def recordStatus():
         res = es.indices.create(index='fcs_status', body=mappings)
         print("es.indices.create result is ", res)
 
+
+def recordStatus():
+    """
+    记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
+    """
     # 铁笼启动是否已经记录
     isRecorded = os.environ["IS_RECORD"]
     hostName = os.environ["HOSTNAME"]

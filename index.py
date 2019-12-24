@@ -349,9 +349,9 @@ def calc_main_feature(entname):
     # return total_score
 
 
-def application(env, start_response):
+def application(environ, start_response):
     print("==========================")
-    print("params is",env["QUERY_STRING"])
+    print("params is",environ["QUERY_STRING"])
     print("==========================")
     entname = '山东惠硕信息技术有限公司'
     result = calc_main_feature(entname)

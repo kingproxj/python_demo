@@ -16,6 +16,11 @@ codeFiles = ""
 if "CodeFile" in os.environ:
     codeFiles = os.environ["CodeFile"]
 def application(environ, start_response):
+    # 创建fcs_status索引
+    fcs_status.createStatusIndex()
+    # 创建fcs_audit索引
+    fcs_audit.createAuditIndex()
+
     # 记录启动状态
     fcs_status.recordStatus()
     print("environ['QUERY_STRING']")

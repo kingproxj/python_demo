@@ -42,7 +42,7 @@ def application(environ, start_response):
         start_time = time.time()
         p_l = []
         for code_url in codeUris:
-            filename = code_url.split('/')[-1]
+            filename = code_url.split('=')[-1]
             print("开始下载", filename)
             fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename)
             # urllib.request.urlretrieve(code_url, filename, Schedule)
@@ -61,7 +61,7 @@ def application(environ, start_response):
         start_time = time.time()
         p_l = []
         for model_url in modelUris:
-            filename = model_url.split('/')[-1]
+            filename = model_url.split('=')[-1]
             print("开始下载", filename)
             fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename)
             # urllib.request.urlretrieve(code_url, filename, Schedule)

@@ -6,9 +6,12 @@ from elasticsearch.helpers import bulk
 from t_snowflake import IdWorker
 
 worker = IdWorker(1, 2, 0)
-esHost = os.environ["ES_SERVER_HOST"]
-# esHost = "117.73.3.232:31103"
+
+esHost = "117.73.3.232:31103"
+if "ES_SERVER_HOST" in os.environ:
+    esHost = os.environ["ES_SERVER_HOST"]
 es = Elasticsearch([esHost])
+
 
 def createStatusIndex():
     """
@@ -79,28 +82,33 @@ def createStatusIndex():
         print("es.indices.create result is ", res)
 
 
-def recordStatus():
+def recordStatus(record_id=None):
     """
     记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
     """
     # 铁笼启动是否已经记录
+    if record_id is None:
+        record_id = worker.get_id()
+        print("id is", record_id)
     isRecorded = os.environ["IS_RECORD"]
-    hostName = os.environ["HOSTNAME"]
+    service_id = os.environ["HOSTNAME"]
+    if "service_id" in os.environ:
+        service_id = os.environ['service_id']
     handler = os.environ["Handler"]
     runtime = os.environ["Runtime"]
     serverName = os.environ["SERVER_NAME"]
-    content = "启动铁笼" + hostName
+    if "service_name_cn" in os.environ:
+        serverName = os.environ["service_name_cn"]
+    content = "启动铁笼" + service_id
     now = datetime.now()
-    #print(now.strftime("%Y-%m-%d %H:%M:%S"))
+    # print(now.strftime("%Y-%m-%d %H:%M:%S"))
     nowFormat = now.strftime("%Y-%m-%d %H:%M:%S")
     user_id = os.environ["creator"]
     if isRecorded == "0":
-        id = worker.get_id()
-        print("id is", id)
         # 插入数据
         action = {
-            "id": id,
-            "service_id": hostName,
+            "id": record_id,
+            "service_id": service_id,
             "service_name": serverName,
             "request_id": "",
             "user_id": user_id,

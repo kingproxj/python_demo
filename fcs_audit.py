@@ -6,8 +6,9 @@ from elasticsearch.helpers import bulk
 from t_snowflake import IdWorker
 
 worker = IdWorker(1, 2, 0)
-esHost = os.environ["ES_SERVER_HOST"]
-# esHost = "117.73.3.232:31103"
+esHost = "117.73.3.232:31103"
+if "ES_SERVER_HOST" in os.environ:
+    esHost = os.environ["ES_SERVER_HOST"]
 es = Elasticsearch([esHost])
 
 
@@ -79,10 +80,13 @@ def createAuditIndex():
         print(res)
 
 
-def recordAudit(operations, detail):
+def recordAudit(operations, detail, record_id=None):
     """
     记录启动铁笼日志
     """
+    if record_id is None:
+        record_id = worker.get_id()
+        print("id is", record_id)
     print("operation is ", operations)
     if operations == "":
         print("operations is none, return")
@@ -94,17 +98,21 @@ def recordAudit(operations, detail):
         print("请先创建索引fcs_audit")
     else:
         recordId = os.environ["IS_RECORD"]
-        hostName = os.environ["HOSTNAME"]
+        service_id = os.environ["HOSTNAME"]
+        if "service_id" in os.environ:
+            service_id = os.environ['service_id']
         handler = os.environ["Handler"]
         runtime = os.environ["Runtime"]
         serverName = os.environ["SERVER_NAME"]
+        if "service_name_cn" in os.environ:
+            serverName = os.environ["service_name_cn"]
         now = datetime.now()
         print(now.strftime("%Y-%m-%d %H:%M:%S"))
         createTime = now.strftime("%Y-%m-%d %H:%M:%S")
         # 更新数据
         action = {
-            "id": worker.get_id(),
-            "service_id": hostName,
+            "id": record_id,
+            "service_id": service_id,
             "service_name": serverName,
             "ops": operations,
             "block_id": "736473430",

@@ -8,6 +8,9 @@ import fcs_status
 import fcs_audit
 
 import HandlerName
+from t_snowflake import IdWorker
+
+worker = IdWorker(1, 2, 0)
 
 modelFiles = ""
 if "ModelFile" in os.environ:
@@ -21,8 +24,10 @@ def application(environ, start_response):
     # 创建fcs_audit索引
     fcs_audit.createAuditIndex()
 
+    # fcs_status.id == fcs_audit.id进行关联查询
+    record_id = worker.get_id()
     # 记录启动状态
-    fcs_status.recordStatus()
+    fcs_status.recordStatus(record_id)
     print("environ['QUERY_STRING']")
 
     def Schedule(blocknum, blocksize, totalsize):
@@ -44,7 +49,7 @@ def application(environ, start_response):
         for code_url in codeUris:
             filename = code_url.split('=')[-1]
             print("开始下载", filename)
-            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename)
+            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
             # urllib.request.urlretrieve(code_url, filename, Schedule)
 
             p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
@@ -63,7 +68,7 @@ def application(environ, start_response):
         for model_url in modelUris:
             filename = model_url.split('=')[-1]
             print("开始下载", filename)
-            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename)
+            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
             # urllib.request.urlretrieve(code_url, filename, Schedule)
 
             p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
@@ -76,11 +81,11 @@ def application(environ, start_response):
         print('主线程运行时间: %s' % (time.time() - start_time))
 
     params = environ['QUERY_STRING']
-    fcs_audit.recordAudit("输入参数", params)
-    fcs_audit.recordAudit("加载模型", codeFiles)
-    # fcs_audit.recordAudit("加载算法", codeFiles)
+    fcs_audit.recordAudit("输入参数", params, record_id)
+    fcs_audit.recordAudit("加载模型", codeFiles, record_id)
+    # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
     result = HandlerName.FunctionName(environ, start_response)
-    fcs_audit.recordAudit("铁笼输出", result)
+    fcs_audit.recordAudit("铁笼输出", result, record_id)
     # 更新为销毁状态
-    fcs_status.recordStatus()
+    fcs_status.recordStatus(record_id)
     return result

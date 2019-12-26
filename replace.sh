@@ -2,7 +2,7 @@ myhandler=$(echo $Handler | cut -d"." -f1)
 myfunction=$(echo $Handler | cut -d"." -f2)
 echo $myhandler $myfunction
 handlerFile=$myhandler'.py'
-echo 'def '$Handler'(environ, start_response):' > $handlerFile
+echo 'def '$myfunction'(environ, start_response):' > $handlerFile
 echo '    result="test" ' >> $handlerFile
 echo '    responsebody = str(result) ' >> $handlerFile
 echo '    start_response("200 OK", [("Content-Type","application/json")]) ' >> $handlerFile

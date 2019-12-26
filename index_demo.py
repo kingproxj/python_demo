@@ -357,5 +357,5 @@ def application(environ, start_response):
     result = calc_main_feature(entname)
     print(result)
     responsebody = str(result)
-    start_response('200 OK', [('Content-Type','application/json')])
+    start_response("200 OK", [("Content-Type","application/json")])
     return [bytes(responsebody, encoding = "utf8")]

@@ -97,6 +97,9 @@ def recordAudit(operations, detail, record_id=None):
         # 创建索引,建立mapping索引
         print("请先创建索引fcs_audit")
     else:
+        op_status = "成功"
+        if operations.index("异常") >= 0:
+            op_status = "失败"
         recordId = os.environ["IS_RECORD"]
         service_id = os.environ["HOSTNAME"]
         if "service_id" in os.environ:
@@ -121,7 +124,7 @@ def recordAudit(operations, detail, record_id=None):
             "detail": detail,
             "created_time": createTime,
             "created_time_ms": 1,
-            "status": "成功"
+            "status": op_status
         }
         print("record is ", action)
         res = es.index(index="fcs_audit", doc_type="doc", body=action)

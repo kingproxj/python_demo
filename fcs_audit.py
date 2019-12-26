@@ -98,7 +98,7 @@ def recordAudit(operations, detail, record_id=None):
         print("请先创建索引fcs_audit")
     else:
         op_status = "成功"
-        if operations.index("异常") >= 0:
+        if "异常" in op_status:
             op_status = "失败"
         recordId = os.environ["IS_RECORD"]
         service_id = os.environ["HOSTNAME"]

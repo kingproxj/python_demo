@@ -6,4 +6,4 @@ RUN mkdir -p /fcs \
 ADD . /fcs
 WORKDIR /fcs
 
-CMD ["/bin/sh", "-c", "sh replace.sh && python3 start.py"]
+CMD ["/bin/sh", "-c", "python3 download_models.py && sh replace.sh && python3 start.py"]

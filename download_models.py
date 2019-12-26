@@ -117,3 +117,6 @@ def download():
         return logInfo(e)
     except BaseException as e:
         return logInfo(e)
+
+if __name__ == '__main__':
+    download()

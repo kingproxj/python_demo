@@ -63,6 +63,10 @@ def application(environ, start_response):
         # 记录启动状态
         fcs_status.recordStatus(record_id)
         print("environ['QUERY_STRING']")
+        params = environ['QUERY_STRING']
+        fcs_audit.recordAudit("铁笼启动", "参数: " + params, record_id)
+        # fcs_audit.recordAudit("加载模型", codeFiles, record_id)
+        # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
 
         def Schedule(blocknum, blocksize, totalsize):
             '''
@@ -83,7 +87,7 @@ def application(environ, start_response):
             for code_url in codeUris:
                 filename = code_url.split('=')[-1]
                 print("开始下载", filename)
-                fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
+                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
                 try:
                     p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
@@ -118,7 +122,7 @@ def application(environ, start_response):
             for model_url in modelUris:
                 filename = model_url.split('=')[-1]
                 print("开始下载", filename)
-                fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
+                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
 
                 p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
@@ -130,14 +134,22 @@ def application(environ, start_response):
 
             print('主线程运行时间: %s' % (time.time() - start_time))
 
-        params = environ['QUERY_STRING']
-        fcs_audit.recordAudit("输入参数", params, record_id)
-        fcs_audit.recordAudit("加载模型", codeFiles, record_id)
-        # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
-        result = HandlerName.FunctionName(environ, start_response)
-        fcs_audit.recordAudit("铁笼输出", result, record_id)
-        # 更新为销毁状态
-        fcs_status.recordStatus(record_id)
+        result = ""
+        try:
+            result = HandlerName.FunctionName(environ, start_response)
+            fcs_audit.recordAudit("铁笼输出", result, record_id)
+        except Exception as e:
+            result = traceback.format_exc()
+            print("下载模型和算法文件异常:", result)
+            exceptStr = str(e.__class__.__name__) + ": " + str(e)
+            if log_level == "debug":
+                fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+            else:
+                fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
+        finally:
+            fcs_audit.recordAudit("铁笼销毁", "", record_id)
+            # 更新为销毁状态
+            fcs_status.recordStatus(record_id)
         return result
     except AttributeError as e:
         return logInfo(e, record_id, start_response)

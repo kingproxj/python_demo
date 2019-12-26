@@ -7,7 +7,6 @@ import os
 
 from t_snowflake import IdWorker
 
-
 worker = IdWorker(1, 2, 0)
 
 modelFiles = ""
@@ -59,11 +58,11 @@ def download():
                     # urllib.request.urlretrieve(code_url, filename, Schedule)
                 except ConnectionRefusedError as e:
                     result = traceback.format_exc()
-                    print("下载模型和算法文件异常:",result)
+                    print("下载模型和算法文件异常:", result)
                 except Exception as e:
                     result = traceback.format_exc()
                     print("下载模型和算法文件异常:", result)
-                    
+
             for p in p_l:
                 p.join()
 
@@ -117,6 +116,7 @@ def download():
         return logInfo(e)
     except BaseException as e:
         return logInfo(e)
+
 
 if __name__ == '__main__':
     download()

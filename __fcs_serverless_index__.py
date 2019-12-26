@@ -134,19 +134,21 @@ def application(environ, start_response):
 
             print('主线程运行时间: %s' % (time.time() - start_time))
 
-        result = ""
         try:
             result = HandlerName.FunctionName(environ, start_response)
-            fcs_audit.recordAudit("铁笼输出", result, record_id)
         except Exception as e:
             result = traceback.format_exc()
             print("下载模型和算法文件异常:", result)
             exceptStr = str(e.__class__.__name__) + ": " + str(e)
             if log_level == "debug":
-                fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(result), record_id)
             else:
-                fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
+                fcs_audit.recordAudit("铁笼异常", "计算异常: " + exceptStr, record_id)
+            responsebody = str(result)
+            start_response('200 OK', [('Content-Type', 'application/json')])
+            return [bytes(responsebody, encoding="utf8")]
         finally:
+            fcs_audit.recordAudit("铁笼输出", result, record_id)
             fcs_audit.recordAudit("铁笼销毁", "", record_id)
             # 更新为销毁状态
             fcs_status.recordStatus(record_id)

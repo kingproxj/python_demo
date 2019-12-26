@@ -83,16 +83,17 @@ def application(environ, start_response):
         if "CodeUri" in os.environ:
             codeUris = (os.getenv('CodeUri')).split(',')
             start_time = time.time()
-            p_l = []
+            # p_l = []
             for code_url in codeUris:
                 filename = code_url.split('=')[-1]
                 print("开始下载", filename)
                 fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
                 try:
-                    p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
-                    p_l.append(p)
-                    p.start()
+                    # p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
+                    # p_l.append(p)
+                    # p.start()
+                    urllib.request.urlretrieve(code_url, filename, Schedule)
                 except ConnectionRefusedError as e:
                     result = traceback.format_exc()
                     print("下载模型和算法文件异常:",result)
@@ -110,8 +111,8 @@ def application(environ, start_response):
                     else:
                         fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
 
-            for p in p_l:
-                p.join()
+            # for p in p_l:
+            #     p.join()
 
             print('主线程运行时间: %s' % (time.time() - start_time))
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import traceback
 from multiprocessing import Process
 import time
 import urllib.request
@@ -18,74 +19,144 @@ if "ModelFile" in os.environ:
 codeFiles = ""
 if "CodeFile" in os.environ:
     codeFiles = os.environ["CodeFile"]
+
+log_level = "debug"
+if "log_level" in os.environ:
+    log_level = os.environ["log_level"]
+
+
+def logInfo(e, record_id, start_response):
+    print("============================")
+    print('错误类型是', e.__class__.__name__)
+    print('错误明细是', e)
+    result = traceback.format_exc()
+    print(result)
+    try:
+        fcs_audit.recordAudit("铁笼异常", result, record_id)
+    except KeyError as ke:
+        print('ke错误类型是', ke.__class__.__name__)
+        print('ke错误明细是', ke)
+        traceback.print_exc()
+    except BaseException as ke:
+        print('ke错误类型是', ke.__class__.__name__)
+        print('ke错误明细是', ke)
+        traceback.print_exc()
+    finally:
+        print("============================")
+        exceptStr = str(e.__class__.__name__) + ": " + str(e)
+        responsebody = exceptStr
+        if log_level == "debug":
+            responsebody = str(result)
+        start_response('200 OK', [('Content-Type', 'application/json')])
+        return [bytes(responsebody, encoding="utf8")]
+
+
 def application(environ, start_response):
-    # 创建fcs_status索引
-    fcs_status.createStatusIndex()
-    # 创建fcs_audit索引
-    fcs_audit.createAuditIndex()
+    try:
+        # 创建fcs_status索引
+        fcs_status.createStatusIndex()
+        # 创建fcs_audit索引
+        fcs_audit.createAuditIndex()
 
-    # fcs_status.id == fcs_audit.id进行关联查询
-    record_id = worker.get_id()
-    # 记录启动状态
-    fcs_status.recordStatus(record_id)
-    print("environ['QUERY_STRING']")
+        # fcs_status.id == fcs_audit.id进行关联查询
+        record_id = worker.get_id()
+        # 记录启动状态
+        fcs_status.recordStatus(record_id)
+        print("environ['QUERY_STRING']")
 
-    def Schedule(blocknum, blocksize, totalsize):
-        '''
-        :param blocknum: 已经下载的数据块
-        :param blocksize: 数据块的大小
-        :param totalsize: 远程文件的大小
-        :return:
-        '''
-        per = 100.0 * blocknum * blocksize / totalsize
-        if per > 100:
-            per = 100
-            print('%s当前下载进度：%d' % (filename, per))
+        def Schedule(blocknum, blocksize, totalsize):
+            '''
+            :param blocknum: 已经下载的数据块
+            :param blocksize: 数据块的大小
+            :param totalsize: 远程文件的大小
+            :return:
+            '''
+            per = 100.0 * blocknum * blocksize / totalsize
+            if per > 100:
+                per = 100
+                print('%s当前下载进度：%d' % (filename, per))
 
-    if "CodeUri" in os.environ:
-        codeUris = (os.getenv('CodeUri')).split(',')
-        start_time = time.time()
-        p_l = []
-        for code_url in codeUris:
-            filename = code_url.split('=')[-1]
-            print("开始下载", filename)
-            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
-            # urllib.request.urlretrieve(code_url, filename, Schedule)
+        if "CodeUri" in os.environ:
+            codeUris = (os.getenv('CodeUri')).split(',')
+            start_time = time.time()
+            p_l = []
+            for code_url in codeUris:
+                filename = code_url.split('=')[-1]
+                print("开始下载", filename)
+                fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
+                # urllib.request.urlretrieve(code_url, filename, Schedule)
 
-            p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
-            p_l.append(p)
-            p.start()
+                p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
+                p_l.append(p)
+                p.start()
 
-        for p in p_l:
-            p.join()
+            for p in p_l:
+                p.join()
 
-        print('主线程运行时间: %s' % (time.time() - start_time))
+            print('主线程运行时间: %s' % (time.time() - start_time))
 
-    if "ModelUri" in os.environ:
-        modelUris = (os.getenv('ModelUri')).split(',')
-        start_time = time.time()
-        p_l = []
-        for model_url in modelUris:
-            filename = model_url.split('=')[-1]
-            print("开始下载", filename)
-            fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
-            # urllib.request.urlretrieve(code_url, filename, Schedule)
+        if "ModelUri" in os.environ:
+            modelUris = (os.getenv('ModelUri')).split(',')
+            start_time = time.time()
+            p_l = []
+            for model_url in modelUris:
+                filename = model_url.split('=')[-1]
+                print("开始下载", filename)
+                fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
+                # urllib.request.urlretrieve(code_url, filename, Schedule)
 
-            p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
-            p_l.append(p)
-            p.start()
+                p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
+                p_l.append(p)
+                p.start()
 
-        for p in p_l:
-            p.join()
+            for p in p_l:
+                p.join()
 
-        print('主线程运行时间: %s' % (time.time() - start_time))
+            print('主线程运行时间: %s' % (time.time() - start_time))
 
-    params = environ['QUERY_STRING']
-    fcs_audit.recordAudit("输入参数", params, record_id)
-    fcs_audit.recordAudit("加载模型", codeFiles, record_id)
-    # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
-    result = HandlerName.FunctionName(environ, start_response)
-    fcs_audit.recordAudit("铁笼输出", result, record_id)
-    # 更新为销毁状态
-    fcs_status.recordStatus(record_id)
-    return result
+        params = environ['QUERY_STRING']
+        fcs_audit.recordAudit("输入参数", params, record_id)
+        fcs_audit.recordAudit("加载模型", codeFiles, record_id)
+        # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
+        result = HandlerName.FunctionName(environ, start_response)
+        fcs_audit.recordAudit("铁笼输出", result, record_id)
+        # 更新为销毁状态
+        fcs_status.recordStatus(record_id)
+        return result
+    except AttributeError as e:
+        return logInfo(e, record_id, start_response)
+    except ModuleNotFoundError as e:
+        return logInfo(e, record_id, start_response)
+    except ImportError as e:
+        return logInfo(e, record_id, start_response)
+    except NameError as e:
+        return logInfo(e, record_id, start_response)
+    except KeyError as e:
+        return logInfo(e, record_id, start_response)
+    except IndexError as e:
+        return logInfo(e, record_id, start_response)
+    except LookupError as e:
+        return logInfo(e, record_id, start_response)
+    except SyntaxError as e:
+        return logInfo(e, record_id, start_response)
+    except StopIteration as e:
+        return logInfo(e, record_id, start_response)
+    except FloatingPointError as e:
+        return logInfo(e, record_id, start_response)
+    except OverflowError as e:
+        return logInfo(e, record_id, start_response)
+    except EOFError as e:
+        return logInfo(e, record_id, start_response)
+    except EnvironmentError as e:
+        return logInfo(e, record_id, start_response)
+    except IOError as e:
+        return logInfo(e, record_id, start_response)
+    except BaseException as e:
+        return logInfo(e, record_id, start_response)
+    # finally:
+    #     print("=======")
+    #     print(result)
+    #     print("=======")
+    #     responsebody = str(result)
+    #     start_response('200 OK', [('Content-Type', 'application/json')])
+    #     return [bytes(responsebody, encoding="utf8")]

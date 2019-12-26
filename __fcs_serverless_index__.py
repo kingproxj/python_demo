@@ -85,10 +85,26 @@ def application(environ, start_response):
                 print("开始下载", filename)
                 fcs_audit.recordAudit("铁笼启动", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
-
-                p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
-                p_l.append(p)
-                p.start()
+                try:
+                    p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
+                    p_l.append(p)
+                    p.start()
+                except ConnectionRefusedError as e:
+                    result = traceback.format_exc()
+                    print("下载模型和算法文件异常:",result)
+                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    if log_level == "debug":
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+                    else:
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
+                except Exception as e:
+                    result = traceback.format_exc()
+                    print("下载模型和算法文件异常:", result)
+                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    if log_level == "debug":
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+                    else:
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
 
             for p in p_l:
                 p.join()

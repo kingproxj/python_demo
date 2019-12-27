@@ -140,19 +140,22 @@ def application(environ, start_response):
 
         try:
             result = HandlerName.FunctionName(environ, start_response)
+            trans_result = ""
+            if result:
+                trans_result = str(result[0], encoding="utf-8")
         except Exception as e:
-            result = traceback.format_exc()
-            print("下载模型和算法文件异常:", result)
+            trans_result = traceback.format_exc()
+            print("下载模型和算法文件异常:", trans_result)
             exceptStr = str(e.__class__.__name__) + ": " + str(e)
             if log_level == "debug":
-                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(result), record_id)
+                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(trans_result), record_id)
             else:
                 fcs_audit.recordAudit("铁笼异常", "计算异常: " + exceptStr, record_id)
-            responsebody = str(result)
+            responsebody = str(trans_result)
             start_response('200 OK', [('Content-Type', 'application/json')])
             return [bytes(responsebody, encoding="utf8")]
         finally:
-            fcs_audit.recordAudit("铁笼输出", str(result), record_id)
+            fcs_audit.recordAudit("铁笼输出", str(trans_result), record_id)
             fcs_audit.recordAudit("铁笼销毁", "", record_id)
             # 更新为销毁状态
             fcs_status.recordStatus(record_id)

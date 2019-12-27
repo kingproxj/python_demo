@@ -88,6 +88,8 @@ def recordAudit(operations, detail, record_id=None, date_size=None):
     if record_id is None:
         record_id = worker.get_id()
         print("id is", record_id)
+    if date_size is None:
+        date_size = 0
     print("operation is ", operations)
     if operations == "":
         print("operations is none, return")

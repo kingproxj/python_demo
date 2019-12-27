@@ -67,7 +67,7 @@ def application(environ, start_response):
         print("origin environ['QUERY_STRING']: ", params)
         environ['QUERY_STRING'] = urllib.parse.unquote(params)
         print("unquote_params is ", environ['QUERY_STRING'])
-        fcs_audit.recordAudit("铁笼启动", "参数: " + params, record_id)
+        fcs_audit.recordAudit("铁笼启动", "参数: " + environ['QUERY_STRING'], record_id)
         # fcs_audit.recordAudit("加载模型", codeFiles, record_id)
         # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
 

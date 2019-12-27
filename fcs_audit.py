@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
@@ -80,7 +81,7 @@ def createAuditIndex():
         print(res)
 
 
-def recordAudit(operations, detail, record_id=None):
+def recordAudit(operations, detail, record_id=None, date_size=None):
     """
     记录启动铁笼日志
     """
@@ -110,8 +111,10 @@ def recordAudit(operations, detail, record_id=None):
         if "service_name_cn" in os.environ:
             serverName = os.environ["service_name_cn"]
         now = datetime.now()
+        dt = time.time()
+        created_time_ms = int(round(dt * 1000))
         print(now.strftime("%Y-%m-%d %H:%M:%S"))
-        createTime = now.strftime("%Y-%m-%d %H:%M:%S")
+        createTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(dt)))
         # 更新数据
         action = {
             "id": record_id,
@@ -120,10 +123,10 @@ def recordAudit(operations, detail, record_id=None):
             "ops": operations,
             "block_id": "736473430",
             "block_number": 255323,
-            "data_size": 1236,
+            "data_size": date_size,
             "detail": detail,
             "created_time": createTime,
-            "created_time_ms": 1,
+            "created_time_ms": created_time_ms,
             "status": op_status
         }
         print("record is ", action)

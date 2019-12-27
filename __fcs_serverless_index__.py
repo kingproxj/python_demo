@@ -33,7 +33,7 @@ def logInfo(e, record_id, start_response):
     result = traceback.format_exc()
     print(result)
     try:
-        fcs_audit.recordAudit("铁笼异常", result, record_id)
+        fcs_audit.recordAudit("铁笼异常", result, record_id, len(result))
     except KeyError as ke:
         print('ke错误类型是', ke.__class__.__name__)
         print('ke错误明细是', ke)
@@ -67,7 +67,7 @@ def application(environ, start_response):
         print("origin environ['QUERY_STRING']: ", params)
         environ['QUERY_STRING'] = urllib.parse.unquote(params)
         print("unquote_params is ", environ['QUERY_STRING'])
-        fcs_audit.recordAudit("铁笼启动", "参数: " + environ['QUERY_STRING'], record_id)
+        fcs_audit.recordAudit("铁笼启动", "参数: " + environ['QUERY_STRING'], record_id, len(environ["QUERY_STRING"]))
         # fcs_audit.recordAudit("加载模型", codeFiles, record_id)
         # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
 
@@ -81,6 +81,7 @@ def application(environ, start_response):
             per = 100.0 * blocknum * blocksize / totalsize
             if per > 100:
                 per = 100
+                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id, totalsize)
                 print('%s当前下载进度：%d' % (filename, per))
 
         if "CodeUri" in os.environ:
@@ -90,7 +91,7 @@ def application(environ, start_response):
             for code_url in codeUris:
                 filename = code_url.split('=')[-1]
                 print("开始下载", filename)
-                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
+                # fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
                 try:
                     # p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
@@ -102,17 +103,17 @@ def application(environ, start_response):
                     print("下载模型和算法文件异常:",result)
                     exceptStr = str(e.__class__.__name__) + ": " + str(e)
                     if log_level == "debug":
-                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(result))
                     else:
-                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr))
                 except Exception as e:
                     result = traceback.format_exc()
                     print("下载模型和算法文件异常:", result)
                     exceptStr = str(e.__class__.__name__) + ": " + str(e)
                     if log_level == "debug":
-                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id)
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(str(result)))
                     else:
-                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id)
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr))
 
             # for p in p_l:
             #     p.join()
@@ -126,7 +127,7 @@ def application(environ, start_response):
             for model_url in modelUris:
                 filename = model_url.split('=')[-1]
                 print("开始下载", filename)
-                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
+                # fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
 
                 p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
@@ -148,15 +149,15 @@ def application(environ, start_response):
             print("下载模型和算法文件异常:", trans_result)
             exceptStr = str(e.__class__.__name__) + ": " + str(e)
             if log_level == "debug":
-                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(trans_result), record_id)
+                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(trans_result), record_id, len(str(trans_result)))
             else:
-                fcs_audit.recordAudit("铁笼异常", "计算异常: " + exceptStr, record_id)
+                fcs_audit.recordAudit("铁笼异常", "计算异常: " + exceptStr, record_id, len(exceptStr))
             responsebody = str(trans_result)
             start_response('200 OK', [('Content-Type', 'application/json')])
             return [bytes(responsebody, encoding="utf8")]
         finally:
-            fcs_audit.recordAudit("铁笼输出", str(trans_result), record_id)
-            fcs_audit.recordAudit("铁笼销毁", "", record_id)
+            fcs_audit.recordAudit("铁笼输出", str(trans_result), record_id, len(str(trans_result)))
+            fcs_audit.recordAudit("铁笼销毁", "", record_id, 0)
             # 更新为销毁状态
             fcs_status.recordStatus(record_id)
         return result

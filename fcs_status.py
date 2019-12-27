@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
+import time
+import traceback
 from datetime import datetime
+
+import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from t_snowflake import IdWorker
@@ -101,8 +105,9 @@ def recordStatus(record_id=None):
         serverName = os.environ["service_name_cn"]
     content = "启动铁笼" + service_id
     now = datetime.now()
-    # print(now.strftime("%Y-%m-%d %H:%M:%S"))
-    nowFormat = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(now.strftime("%Y-%m-%d %H:%M:%S"))
+    dt = time.time()
+    nowFormat = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(dt)))
     user_id = os.environ["creator"]
     if isRecorded == "0":
         # 插入数据
@@ -126,25 +131,89 @@ def recordStatus(record_id=None):
             os.environ["IS_RECORD"] = res["_id"]
             print("IS_RECORD is ", os.environ["IS_RECORD"])
     else:
-        # 更新数据
-        action = {
-            "doc": {
-                # "id": isRecorded,
-                # "service_id": hostName,
-                # "service_name": serverName,
-                # "request_id": "",
-                # "user_id": user_id,
-                # "company_name": "",
-                # "live_time": 0,
-                "destroy_time": nowFormat,
-                # "created_time": createTime,
-                "status": "已销毁",
-                "blockchain": "数安链"
+        # # 根据关键词查找
+        # doc = {
+        #     "query": {
+        #         "match": {
+        #             # "_id": "jId_RW8BtULaBa6q8cmB"
+        #             "_id": isRecorded
+        #         }
+        #     }
+        # }
+        # res = es.search(index="fcs_status", body=doc)
+        # # {'took': 97, 'timed_out': False, '_shards': {'total': 5, 'successful': 5, 'skipped': 0, 'failed': 0}, 'hits': {'total': 1, 'max_score': 1.0, 'hits': [{'_index': 'fcs_status', '_type': 'doc', '_id': 'jId_RW8BtULaBa6q8cmB', '_score': 1.0, '_source': {'id': 1210409175465730048, 'service_id': 'aa527f36-da1c-4406-baa6-d62f1943c9c3', 'service_name': '铁笼调用联通测试', 'request_id': '', 'user_id': 'a6837cf7-704a-41bd-a38f-fbfb8c4841bb', 'company_name': '', 'live_time': 0, 'destroy_time': '2019-12-27 11:56:52', 'created_time': '2019-12-27 11:56:50', 'status': '已销毁', 'blockchain': '数安链'}}]}}
+        # # {'took': 14, 'timed_out': False, '_shards': {'total': 5, 'successful': 5, 'skipped': 0, 'failed': 0}, 'hits': {'total': 0, 'max_score': None, 'hits': []}}
+        # created_time = nowFormat
+        # if res["hits"]["total"] > 0:
+        #     created_time = res["hits"]["hits"][0]["_source"]["created_time"]
+        # print("created_time is", created_time)
+        # created_time_ms = int(round(time.mktime(time.strptime(created_time, "%Y-%m-%d %H:%M:%S"))) * 1000)
+        # print("created_time_ms is", created_time_ms)
+        # destroy_time_ms = int(round(dt*1000))
+        # print("destroy_time_ms is", destroy_time_ms)
+        # live_time_ms = destroy_time_ms - created_time_ms
+        # print("live_time_ms is", live_time_ms)
+        # # 更新数据
+        # action = {
+        #     "doc": {
+        #         # "id": isRecorded,
+        #         # "service_id": hostName,
+        #         # "service_name": serverName,
+        #         # "request_id": "",
+        #         # "user_id": user_id,
+        #         # "company_name": "",
+        #         "live_time": live_time_ms,
+        #         "destroy_time": nowFormat,
+        #         # "created_time": createTime,
+        #         "status": "已销毁",
+        #         "blockchain": "数安链"
+        #     }
+        # }
+        # print("update status", os.environ["IS_RECORD"])
+        # res = es.update(index="fcs_status", id=isRecorded, doc_type="doc", body=action)
+        # print("es.update result is", res)
+
+        # 根据id查询
+        try:
+            res = es.get(index="fcs_status", doc_type="doc", id=isRecorded)
+            # {'_index': 'fcs_status', '_type': 'doc', '_id': 'jId_RW8BtULaBa6q8cmB', '_version': 2, 'found': True, '_source': {'id': 1210409175465730048, 'service_id': 'aa527f36-da1c-4406-baa6-d62f1943c9c3', 'service_name': '铁笼调用联通测试', 'request_id': '', 'user_id': 'a6837cf7-704a-41bd-a38f-fbfb8c4841bb', 'company_name': '', 'live_time': 0, 'destroy_time': '2019-12-27 11:56:52', 'created_time': '2019-12-27 11:56:50', 'status': '已销毁', 'blockchain': '数安链'}}
+            created_time = res["_source"]["created_time"]
+            print("created_time is", created_time)
+            created_time_ms = int(round(time.mktime(time.strptime(created_time, "%Y-%m-%d %H:%M:%S"))) * 1000)
+            print("created_time_ms is", created_time_ms)
+            destroy_time_ms = int(round(dt * 1000))
+            print("destroy_time_ms is", destroy_time_ms)
+            live_time_ms = destroy_time_ms - created_time_ms
+            print("live_time_ms is", live_time_ms)
+            # 更新数据
+            action = {
+                "doc": {
+                    # "id": isRecorded,
+                    # "service_id": hostName,
+                    # "service_name": serverName,
+                    # "request_id": "",
+                    # "user_id": user_id,
+                    # "company_name": "",
+                    "live_time": live_time_ms,
+                    "destroy_time": nowFormat,
+                    # "created_time": createTime,
+                    "status": "已销毁",
+                    "blockchain": "数安链"
+                }
             }
-        }
-        print("update status", os.environ["IS_RECORD"])
-        res = es.update(index="fcs_status", id=isRecorded, doc_type="doc", body=action)
-        print("es.update result is", res)
+            print("update status", os.environ["IS_RECORD"])
+            res = es.update(index="fcs_status", id=isRecorded, doc_type="doc", body=action)
+            print("es.update result is", res)
+        except elasticsearch.exceptions.NotFoundError as e:
+            print('错误类型是', e.__class__.__name__)
+            print('错误明细是', e)
+            result = traceback.format_exc()
+            print(result)
+        except Exception as e:
+            print('错误类型是', e.__class__.__name__)
+            print('错误明细是', e)
+            result = traceback.format_exc()
+            print(result)
 
 
 if __name__ == '__main__':

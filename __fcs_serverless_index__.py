@@ -3,6 +3,7 @@ import traceback
 from multiprocessing import Process
 import time
 import urllib.request
+import urllib.parse
 import os
 
 import fcs_status
@@ -62,8 +63,10 @@ def application(environ, start_response):
         record_id = worker.get_id()
         # 记录启动状态
         fcs_status.recordStatus(record_id)
-        print("environ['QUERY_STRING']")
         params = environ['QUERY_STRING']
+        print("origin environ['QUERY_STRING']: ", params)
+        environ['QUERY_STRING'] = urllib.parse.unquote(params)
+        print("unquote_params is ", environ['QUERY_STRING'])
         fcs_audit.recordAudit("铁笼启动", "参数: " + params, record_id)
         # fcs_audit.recordAudit("加载模型", codeFiles, record_id)
         # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
@@ -149,7 +152,7 @@ def application(environ, start_response):
             start_response('200 OK', [('Content-Type', 'application/json')])
             return [bytes(responsebody, encoding="utf8")]
         finally:
-            fcs_audit.recordAudit("铁笼输出", result, record_id)
+            fcs_audit.recordAudit("铁笼输出", str(result), record_id)
             fcs_audit.recordAudit("铁笼销毁", "", record_id)
             # 更新为销毁状态
             fcs_status.recordStatus(record_id)

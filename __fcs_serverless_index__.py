@@ -149,9 +149,9 @@ def application(environ, start_response):
             print("下载模型和算法文件异常:", trans_result)
             exceptStr = str(e.__class__.__name__) + ": " + str(e)
             if log_level == "debug":
-                fcs_audit.recordAudit("铁笼异常", "计算异常: " + str(trans_result), record_id, len(str(trans_result)))
+                fcs_audit.recordAudit("铁笼输出", "计算异常: " + str(trans_result), record_id, len(str(trans_result)))
             else:
-                fcs_audit.recordAudit("铁笼异常", "计算异常: " + exceptStr, record_id, len(exceptStr))
+                fcs_audit.recordAudit("铁笼输出", "计算异常: " + exceptStr, record_id, len(exceptStr))
             responsebody = str(trans_result)
             start_response('200 OK', [('Content-Type', 'application/json')])
             return [bytes(responsebody, encoding="utf8")]

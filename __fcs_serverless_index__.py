@@ -62,7 +62,13 @@ def downloadFile(code_url, filename, record_id):
         if per > 100:
             per = 100
             print('%s当前下载进度：%d' % (filename, per))
-    filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
+    try:
+        filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
+        fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id, httpMessage["Content-Length"])
+    except Exception as e:
+        print('错误类型是', e.__class__.__name__)
+        print('错误明细是', e)
+        traceback.print_exc()
     return filepath, httpMessage["Content-Length"]
 
 

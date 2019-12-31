@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import traceback
-from multiprocessing import Process
+from multiprocessing import Pool
 import time
 import urllib.request
 import urllib.parse
@@ -9,7 +9,6 @@ import os
 import fcs_status
 import fcs_audit
 
-import HandlerName
 from t_snowflake import IdWorker
 
 worker = IdWorker(1, 2, 0)
@@ -51,6 +50,21 @@ def logInfo(e, record_id, start_response):
         start_response('200 OK', [('Content-Type', 'application/json')])
         return [bytes(responsebody, encoding="utf8")]
 
+def downloadFile(code_url, filename, record_id):
+    def Schedule(blocknum, blocksize, totalsize):
+        '''
+        :param blocknum: 已经下载的数据块
+        :param blocksize: 数据块的大小
+        :param totalsize: 远程文件的大小
+        :return:
+        '''
+        per = 100.0 * blocknum * blocksize / totalsize
+        if per > 100:
+            per = 100
+            print('%s当前下载进度：%d' % (filename, per))
+    filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
+    return filepath, httpMessage["Content-Length"]
+
 
 def application(environ, start_response):
     try:
@@ -71,18 +85,8 @@ def application(environ, start_response):
         # fcs_audit.recordAudit("加载模型", codeFiles, record_id)
         # fcs_audit.recordAudit("加载算法", codeFiles, record_id)
 
-        def Schedule(blocknum, blocksize, totalsize):
-            '''
-            :param blocknum: 已经下载的数据块
-            :param blocksize: 数据块的大小
-            :param totalsize: 远程文件的大小
-            :return:
-            '''
-            per = 100.0 * blocknum * blocksize / totalsize
-            if per > 100:
-                per = 100
-                fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id, totalsize)
-                print('%s当前下载进度：%d' % (filename, per))
+        pl = Pool(10)  # 进程池中从无到有创建10个进程,以后一直是这10个进程在执行任务
+        res_l = []
 
         if "CodeUri" in os.environ:
             codeUris = (os.getenv('CodeUri')).split(',')
@@ -97,7 +101,16 @@ def application(environ, start_response):
                     # p = Process(target=urllib.request.urlretrieve, args=(code_url, filename, Schedule))
                     # p_l.append(p)
                     # p.start()
-                    urllib.request.urlretrieve(code_url, filename, Schedule)
+
+                    # urllib.request.urlretrieve(code_url, filename, Schedule)
+
+                    res = pl.apply_async(downloadFile,
+                                         args=(code_url, filename, record_id))  # 异步运行，根据进程池中有的进程数，每次最多3个子进程在异步执行
+                    # 返回结果之后，将结果放入列表，归还进程，之后再执行新的任务
+                    # 需要注意的是，进程池中的三个进程不会同时开启或者同时结束
+                    # 而是执行完一个就释放一个进程，这个进程就去接收新的任务。
+                    res_l.append(res)
+
                 except ConnectionRefusedError as e:
                     result = traceback.format_exc()
                     print("下载模型和算法文件异常:",result)
@@ -118,29 +131,65 @@ def application(environ, start_response):
             # for p in p_l:
             #     p.join()
 
-            print('主线程运行时间: %s' % (time.time() - start_time))
+            # print('主线程运行时间: %s' % (time.time() - start_time))
 
         if "ModelUri" in os.environ:
             modelUris = (os.getenv('ModelUri')).split(',')
             start_time = time.time()
-            p_l = []
+            # p_l = []
             for model_url in modelUris:
                 filename = model_url.split('=')[-1]
                 print("开始下载", filename)
                 # fcs_audit.recordAudit("加载模型", "下载模型和算法文件" + filename, record_id)
                 # urllib.request.urlretrieve(code_url, filename, Schedule)
 
-                p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
-                p_l.append(p)
-                p.start()
+                # p = Process(target=urllib.request.urlretrieve, args=(model_url, filename, Schedule))
+                # p_l.append(p)
+                # p.start()
+                try:
+                    res = pl.apply_async(downloadFile,
+                                         args=(model_url, filename, record_id))  # 异步运行，根据进程池中有的进程数，每次最多3个子进程在异步执行
+                    # 返回结果之后，将结果放入列表，归还进程，之后再执行新的任务
+                    # 需要注意的是，进程池中的三个进程不会同时开启或者同时结束
+                    # 而是执行完一个就释放一个进程，这个进程就去接收新的任务。
+                    res_l.append(res)
 
-            for p in p_l:
-                p.join()
+                except ConnectionRefusedError as e:
+                    result = traceback.format_exc()
+                    print("下载模型和算法文件异常:", result)
+                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    if log_level == "debug":
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(result))
+                    else:
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr))
+                except Exception as e:
+                    result = traceback.format_exc()
+                    print("下载模型和算法文件异常:", result)
+                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    if log_level == "debug":
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(str(result)))
+                    else:
+                        fcs_audit.recordAudit("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr))
 
-            print('主线程运行时间: %s' % (time.time() - start_time))
+            # for p in p_l:
+            #     p.join()
+
+            # print('主线程运行时间: %s' % (time.time() - start_time))
+
+        # 异步apply_async用法：如果使用异步提交的任务，主进程需要使用jion，等待进程池内任务都处理完，然后可以用get收集结果
+        # 否则，主进程结束，进程池可能还没来得及执行，也就跟着一起结束了
+        pl.close()
+        pl.join()
+        for res in res_l:
+            # 使用get来获取apply_aync的结果,如果是apply,则没有get方法,因为apply是同步执行,立刻获取结果,也根本无需get
+            print("res.get is", res.get())
+
+        print('主线程运行时间: %s' % (time.time() - start_time))
 
         try:
-            result = HandlerName.FunctionName(environ, start_response)
+            defaultHandler = "HandlerName"
+            mod = __import__(defaultHandler)
+            result = mod.FunctionName(environ, start_response)
             if result:
                 export_result = str(result[0], encoding="utf-8")
             fcs_audit.recordAudit("铁笼输出", str(export_result), record_id, len(str(result)))

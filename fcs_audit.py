@@ -11,14 +11,16 @@ esHost = "117.73.3.232:31103"
 if "ES_SERVER_HOST" in os.environ:
     esHost = os.environ["ES_SERVER_HOST"]
 es = Elasticsearch([esHost])
-
+es_audit_index = "fcs_audit"
+if "es_audit_index" in os.environ:
+    es_audit_index = os.environ["es_audit_index"]
 
 def createAuditIndex():
     """
     数据铁笼的审计信息，每个铁笼的各个阶段的详细情况，加载参数情况,在区块链上，查询时，同一个铁笼的按照created_time_ms排序
     :return:
     """
-    res = es.indices.exists(index="fcs_audit")
+    res = es.indices.exists(index=es_audit_index)
     print("fcs_audit es.indices.exists is ", res)
     if not res:
         # 创建fcs_audit索引
@@ -77,7 +79,7 @@ def createAuditIndex():
                 }
             }
         }
-        res = es.indices.create(index='fcs_audit', body=mappings)
+        res = es.indices.create(index=es_audit_index, body=mappings)
         print(res)
 
 
@@ -95,7 +97,7 @@ def recordAudit(operations, detail, record_id=None, date_size=None):
         print("operations is none, return")
         return
 
-    res = es.indices.exists(index="fcs_audit")
+    res = es.indices.exists(index=es_audit_index)
     if not res:
         # 创建索引,建立mapping索引
         print("请先创建索引fcs_audit")
@@ -132,7 +134,7 @@ def recordAudit(operations, detail, record_id=None, date_size=None):
             "status": op_status
         }
         print("record is ", action)
-        res = es.index(index="fcs_audit", doc_type="doc", body=action)
+        res = es.index(index=es_audit_index, doc_type="doc", body=action)
         print("record result is ", res)
 
 

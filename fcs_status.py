@@ -17,7 +17,7 @@ if "ES_SERVER_HOST" in os.environ:
 es = Elasticsearch([esHost])
 es_status_index = "fcs_status"
 if "es_status_index" in os.environ:
-    es_audit_index = os.environ["es_status_index"]
+    es_status_index = os.environ["es_status_index"]
 
 
 def createStatusIndex():

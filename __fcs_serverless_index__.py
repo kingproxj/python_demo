@@ -142,8 +142,8 @@ def application(environ, start_response):
         try:
             result = HandlerName.FunctionName(environ, start_response)
             if result:
-                result = str(result[0], encoding="utf-8")
-            fcs_audit.recordAudit("铁笼输出", str(result), record_id, len(str(result)))
+                export_result = str(result[0], encoding="utf-8")
+            fcs_audit.recordAudit("铁笼输出", str(export_result), record_id, len(str(result)))
         except Exception as e:
             trans_result = traceback.format_exc()
             print("下载模型和算法文件异常:", trans_result)

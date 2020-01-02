@@ -15,7 +15,8 @@ es_audit_index = "fcs_audit"
 if "es_audit_index" in os.environ:
     es_audit_index = os.environ["es_audit_index"]
 
-def createAuditIndex():
+
+def create_audit_index():
     """
     数据铁笼的审计信息，每个铁笼的各个阶段的详细情况，加载参数情况,在区块链上，查询时，同一个铁笼的按照created_time_ms排序
     :return:
@@ -83,9 +84,33 @@ def createAuditIndex():
         print(res)
 
 
-def recordAudit(operations, detail, record_id=None, date_size=None):
+def record_audit(operations, detail, record_id=None, date_size=None):
     """
     记录启动铁笼日志
+    """
+    action = assemble_audit_record(operations, detail, record_id, date_size)
+    print("record is ", action)
+    res = es.index(index=es_audit_index, doc_type="doc", body=action)
+    print("record result is ", res)
+
+
+def bulk_record(actions):
+    res, _ = bulk(es, actions, index=es_audit_index, raise_on_error=True)
+
+
+def assemble_audit_record_with_index(operations, detail, record_id=None, date_size=None):
+    action = assemble_audit_record(operations, detail, record_id, date_size)
+    action_with_index = {
+        "_index": es_audit_index,
+        "_type": "doc",
+        "_source": action
+    }
+    return action_with_index
+
+
+def assemble_audit_record(operations, detail, record_id=None, date_size=None):
+    """
+    组装记录启动铁笼日志报文
     """
     if record_id is None:
         record_id = worker.get_id()
@@ -136,14 +161,15 @@ def recordAudit(operations, detail, record_id=None, date_size=None):
             "status": op_status
         }
         print("record is ", action)
-        res = es.index(index=es_audit_index, doc_type="doc", body=action)
-        print("record result is ", res)
+        # res = es.index(index=es_audit_index, doc_type="doc", body=action)
+        # print("record result is ", res)
+        return action
 
 
 if __name__ == '__main__':
     environ = {
         "QUERY_STRING": "test=a"
     }
-    createAuditIndex()
+    create_audit_index()
     # id = worker.get_id()
     # print(id)

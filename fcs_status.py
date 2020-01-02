@@ -20,7 +20,7 @@ if "es_status_index" in os.environ:
     es_status_index = os.environ["es_status_index"]
 
 
-def createStatusIndex():
+def create_status_index():
     """
     记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
     """
@@ -89,7 +89,7 @@ def createStatusIndex():
         print("es.indices.create result is ", res)
 
 
-def recordStatus(record_id=None):
+def record_status(record_id=None):
     """
     记录启动铁笼日志，数据铁笼的运行监控信息，状态信息，由后台写入ES中，其文档id就是ids_id
     """
@@ -223,6 +223,6 @@ if __name__ == '__main__':
     # environ = {
     #     "QUERY_STRING": "test=a"
     # }
-    recordStatus()
+    record_status()
     # id = worker.get_id()
     # print(id)

@@ -5,6 +5,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from t_snowflake import IdWorker
+from logger import logger
 
 worker = IdWorker(1, 2, 0)
 esHost = "117.73.3.232:31103"
@@ -22,7 +23,7 @@ def create_audit_index():
     :return:
     """
     res = es.indices.exists(index=es_audit_index)
-    print("fcs_audit es.indices.exists is ", res)
+    logger.debug("%s es.indices.exists is %s", es_audit_index, res)
     if not res:
         # 创建fcs_audit索引
         mappings = {
@@ -81,7 +82,7 @@ def create_audit_index():
             }
         }
         res = es.indices.create(index=es_audit_index, body=mappings)
-        print(res)
+        logger.debug(res)
 
 
 def record_audit(operations, detail, record_id=None, date_size=None):
@@ -89,9 +90,9 @@ def record_audit(operations, detail, record_id=None, date_size=None):
     记录启动铁笼日志
     """
     action = assemble_audit_record(operations, detail, record_id, date_size)
-    print("record is ", action)
+    logger.debug("record is %s", action)
     res = es.index(index=es_audit_index, doc_type="doc", body=action)
-    print("record result is ", res)
+    logger.debug("record result is %s", res)
 
 
 def bulk_record(actions):
@@ -105,6 +106,7 @@ def assemble_audit_record_with_index(operations, detail, record_id=None, date_si
         "_type": "doc",
         "_source": action
     }
+    logger.debug("action_with_index is %s", action_with_index)
     return action_with_index
 
 
@@ -114,12 +116,12 @@ def assemble_audit_record(operations, detail, record_id=None, date_size=None):
     """
     if record_id is None:
         record_id = worker.get_id()
-        print("id is", record_id)
+        logger.debug("id is %s", record_id)
     if date_size is None:
         date_size = 0
-    print("operation is ", operations)
+    logger.debug("operation is %s", operations)
     if operations == "":
-        print("operations is none, return")
+        logger.debug("operations is none, return")
         return
 
     # res = es.indices.exists(index=es_audit_index)
@@ -127,7 +129,7 @@ def assemble_audit_record(operations, detail, record_id=None, date_size=None):
     res = True
     if not res:
         # 创建索引,建立mapping索引
-        print("请先创建索引fcs_audit")
+        logger.debug("请先创建索引fcs_audit")
     else:
         op_status = "成功"
         if "异常" in operations or "异常" in detail:
@@ -144,7 +146,7 @@ def assemble_audit_record(operations, detail, record_id=None, date_size=None):
         now = datetime.now()
         dt = time.time()
         created_time_ms = int(round(dt * 1000))
-        print(now.strftime("%Y-%m-%d %H:%M:%S"))
+        logger.debug(now.strftime("%Y-%m-%d %H:%M:%S"))
         createTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(dt)))
         # 更新数据
         action = {
@@ -160,9 +162,9 @@ def assemble_audit_record(operations, detail, record_id=None, date_size=None):
             "created_time_ms": created_time_ms,
             "status": op_status
         }
-        print("record is ", action)
+        logger.debug("record is %s", action)
         # res = es.index(index=es_audit_index, doc_type="doc", body=action)
-        # print("record result is ", res)
+        # logger.debug("record result is %s", res)
         return action
 
 
@@ -172,4 +174,4 @@ if __name__ == '__main__':
     }
     create_audit_index()
     # id = worker.get_id()
-    # print(id)
+    # logger.debug(id)

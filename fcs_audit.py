@@ -97,6 +97,7 @@ def record_audit(operations, detail, record_id=None, date_size=None):
 
 def bulk_record(actions):
     res, _ = bulk(es, actions, index=es_audit_index, raise_on_error=True)
+    logger.debug("bulk_record res is %d", res)
 
 
 def assemble_audit_record_with_index(operations, detail, record_id=None, date_size=None):

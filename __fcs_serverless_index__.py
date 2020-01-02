@@ -36,12 +36,10 @@ def logInfo(e, record_id, start_response):
         global audit_records
         audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", result, record_id, len(result)))
     except KeyError as ke:
-        logger.exception('ke错误类型是%s', ke.__class__.__name__)
-        logger.exception('ke错误明细是%s', ke)
+        logger.exception("Exception occurred")
         traceback.logger.debug_exc()
     except BaseException as ke:
-        logger.exception('ke错误类型是%s', ke.__class__.__name__)
-        logger.exception('ke错误明细是%s', ke)
+        logger.exception("Exception occurred")
         traceback.logger.debug_exc()
     finally:
         exceptStr = str(e.__class__.__name__) + ": " + str(e)
@@ -66,8 +64,7 @@ def downloadFile(code_url, filename, record_id):
     try:
         filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
     except Exception as e:
-        logger.exception('错误类型是%s', e.__class__.__name__)
-        logger.exception('错误明细是%s', e)
+        logger.exception("下载异常")
         traceback.logger.debug_exc()
     return filepath, httpMessage["Content-Length"]
 
@@ -126,20 +123,20 @@ def application(environ, start_response):
 
                 except ConnectionRefusedError as e:
                     result = traceback.format_exc()
-                    logger.exception("下载模型和算法文件异常:%s",result)
-                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    logger.exception("下载模型和算法文件异常")
+                    except_str = str(e.__class__.__name__) + ": " + str(e)
                     if log_level == "DEBUG":
                         audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(result)))
                     else:
-                        audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr)))
+                        audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + except_str, record_id, len(except_str)))
                 except Exception as e:
                     result = traceback.format_exc()
-                    logger.exception("下载模型和算法文件异常:%s", result)
-                    exceptStr = str(e.__class__.__name__) + ": " + str(e)
+                    logger.exception("下载模型和算法文件异常")
+                    except_str = str(e.__class__.__name__) + ": " + str(e)
                     if log_level == "DEBUG":
                         audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + str(result), record_id, len(str(result))))
                     else:
-                        audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + exceptStr, record_id, len(exceptStr)))
+                        audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", "下载模型和算法文件异常: " + except_str, record_id, len(except_str)))
 
             # for p in p_l:
             #     p.join()
@@ -165,12 +162,12 @@ def application(environ, start_response):
             audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼输出", str(export_result), record_id, len(str(result))))
         except Exception as e:
             trans_result = traceback.format_exc()
-            logger.exception("下载模型和算法文件异常:%s", trans_result)
-            exceptStr = str(e.__class__.__name__) + ": " + str(e)
+            logger.exception("计算异常")
+            except_str = str(e.__class__.__name__) + ": " + str(e)
             if log_level == "DEBUG":
                 audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼输出", "计算异常: " + str(trans_result), record_id, len(str(trans_result))))
             else:
-                audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼输出", "计算异常: " + exceptStr, record_id, len(exceptStr)))
+                audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼输出", "计算异常: " + except_str, record_id, len(except_str)))
             responsebody = str(trans_result)
             start_response('200 OK', [('Content-Type', 'application/json')])
             return [bytes(responsebody, encoding="utf8")]

@@ -97,7 +97,9 @@ def recordAudit(operations, detail, record_id=None, date_size=None):
         print("operations is none, return")
         return
 
-    res = es.indices.exists(index=es_audit_index)
+    # res = es.indices.exists(index=es_audit_index)
+    # 默认已创建es_audit_index索引
+    res = True
     if not res:
         # 创建索引,建立mapping索引
         print("请先创建索引fcs_audit")

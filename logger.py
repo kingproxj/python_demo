@@ -9,7 +9,7 @@ handler = logging.FileHandler("./log/fcs.log")
 handler.setLevel(logging.DEBUG)
 if "log_level" in os.environ:
     handler.setLevel(os.environ["log_level"])
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(thread)d - %(process)d - %(funcName)s - %('
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(thread)d - %(process)d - %(funcName)s - %('
                               'lineno)d - %(message)s')
 handler.setFormatter(formatter)
 

@@ -39,10 +39,8 @@ def logInfo(e, record_id, start_response):
         audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼异常", result, record_id, len(result)))
     except KeyError as ke:
         logger.exception("Exception occurred")
-        traceback.logger.debug_exc()
     except BaseException as ke:
         logger.exception("Exception occurred")
-        traceback.logger.debug_exc()
     finally:
         exceptStr = str(e.__class__.__name__) + ": " + str(e)
         responsebody = exceptStr
@@ -74,7 +72,6 @@ def downloadFile(code_url, filename, record_id):
         filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
     except Exception as e:
         logger.exception("下载异常")
-        traceback.logger.debug_exc()
     return filepath, httpMessage["Content-Length"]
 
 

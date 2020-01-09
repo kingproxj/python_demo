@@ -26,6 +26,7 @@ if "log_level" in os.environ:
     log_level = os.environ["log_level"]
 
 audit_records = []
+auth_token = ""
 
 
 def logInfo(e, record_id, start_response):
@@ -65,6 +66,11 @@ def downloadFile(code_url, filename, record_id):
             logger.debug('%s当前下载进度：%d' % (filename, per))
 
     try:
+        opener = urllib.request.build_opener()
+        global auth_token
+        logger.debug("下载文件 %s, auth_token is %s", filename, auth_token)
+        opener.addheaders = [('Authorization', auth_token)]
+        urllib.request.install_opener(opener)
         filepath, httpMessage = urllib.request.urlretrieve(code_url, filename, Schedule)
     except Exception as e:
         logger.exception("下载异常")
@@ -83,6 +89,8 @@ def application(environ, start_response):
         record_id = worker.get_id()
         # 记录启动状态
         fcs_status.record_status(record_id)
+        global auth_token
+        auth_token = environ['HTTP_AUTHORIZATION']
         params = environ['QUERY_STRING']
         logger.debug("origin environ['QUERY_STRING']: %s", params)
         environ['QUERY_STRING'] = urllib.parse.unquote(params)

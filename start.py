@@ -13,5 +13,4 @@ import fcs_status
 httpd = make_server('', 8000, application)
 print('Serving HTTP on port 8000...')
 # 开始监听HTTP请求:
-# serve one request, then exit
-httpd.handle_request()
+httpd.serve_forever()

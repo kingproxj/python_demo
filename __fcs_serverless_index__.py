@@ -85,7 +85,7 @@ def application(environ, start_response):
         # fcs_status.id == fcs_audit.id进行关联查询
         record_id = worker.get_id()
         # 记录启动状态
-        fcs_status.record_status(record_id)
+        status_index_id = fcs_status.record_status(record_id)
         global auth_token
         if "HTTP_AUTHORIZATION" in environ:
             auth_token = environ['HTTP_AUTHORIZATION']
@@ -180,7 +180,7 @@ def application(environ, start_response):
             audit_records.append(fcs_audit.assemble_audit_record_with_index("铁笼销毁", "", record_id, 0))
             fcs_audit.bulk_record(audit_records)
             # 更新为销毁状态
-            fcs_status.record_status(record_id)
+            fcs_status.update_status(status_index_id)
         logger.debug("===audit_records is===%s", audit_records)
         return result
     except AttributeError as e:

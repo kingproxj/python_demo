@@ -95,6 +95,7 @@ def application(environ, start_response):
         environ['QUERY_STRING'] = urllib.parse.unquote(params)
         logger.debug("unquote_params is %s", environ['QUERY_STRING'])
         global audit_records
+        audit_records = []
         audit_records.append(
             fcs_audit.assemble_audit_record_with_index("铁笼启动", "参数: " + environ['QUERY_STRING'], record_id,
                                                        len(environ["QUERY_STRING"])))

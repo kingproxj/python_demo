@@ -96,6 +96,7 @@ def record_audit(operations, detail, record_id=None, date_size=None):
 
 
 def bulk_record(actions):
+    logger.debug("bulk_record actions is %s", actions)
     res, _ = bulk(es, actions, index=es_audit_index, raise_on_error=True)
     logger.debug("bulk_record res is %d", res)
 
